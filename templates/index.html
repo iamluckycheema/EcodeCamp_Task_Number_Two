@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo Application</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+</head>
+<body>
+    <h1>Your Todos</h1>
+
+    <!-- Tab navigation -->
+    <div class="tabs">
+        {% for list_name in lists %}
+        <div class="tab{% if loop.first %} active{% endif %}" onclick="openTab('{{ list_name }}')">{{ list_name }}</div>
+        {% endfor %}
+        <div class="tab" onclick="openTab('new-list')">+ New List</div>
+    </div>
+
+    <!-- Task list display -->
+    {% for list_name in lists %}
+    <div id="{{ list_name }}" class="tab-content {% if loop.first %}active{% endif %}">
+        <!-- <h2>{{ list_name }}</h2> -->
+        <form action="/{{ list_name }}/add" method="POST">
+            <input type="text" name="task" placeholder="Enter a task">
+            <button type="submit">Add Task</button>
+        </form>
+        <ul>
+            {% for task in tasks %}
+            {% if task['list'] == list_name %}
+            <li>
+                <div>
+                    <form action="/{{ list_name }}/toggle/{{ loop.index }}" method="POST" style="display:inline;">
+                        <input type="checkbox" onclick="this.form.submit()" {% if task['completed'] %}checked{% endif %}>
+                    </form>
+                    {% if task['completed'] %}
+                        <s>{{ task['task'] }}</s>
+                    {% else %}
+                        {{ task['task'] }}
+                    {% endif %}
+                </div>
+                <a href="/{{ list_name }}/remove/{{ loop.index }}"><img src={{ url_for('static', filename='icons/delete.png') }}/> </a>
+            </li>
+            {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+
+    <!-- New List Form -->
+    <div id="new-list" class="tab-content">
+        <h2>Create New List</h2>
+        <form action="/add_list" method="POST">
+            <input type="text" name="list_name" placeholder="Enter new list name">
+            <button type="submit">Create List</button>
+        </form>
+    </div>
+    <div class="credits">
+        <p>Made with ❤️ by<a href="https://github.com/iamluckycheema">Lucky Ali</a></p>
+    </div>
+
+    <script>
+        function openTab(listName) {
+            var i, tabContent, tabs;
+            tabContent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabContent.length; i++) {
+                tabContent[i].classList.remove("active");
+            }
+            tabs = document.getElementsByClassName("tab");
+            for (i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+            document.getElementById(listName).classList.add("active");
+            var selectedTab = document.querySelector(`.tab[onclick="openTab('${listName}')"]`);
+            if (selectedTab) {
+                selectedTab.classList.add("active");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var defaultTab = "{{ current_list|default(lists|first) }}";
+            openTab(defaultTab);
+        });
+    </script>
+</body>
+</html>
